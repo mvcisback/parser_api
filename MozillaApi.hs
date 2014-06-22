@@ -1,3 +1,5 @@
+module MozillaApi
+    where
 import Data.Word (Word32)
 
 data SourceLocation = SourceLocation { source :: Maybe String
