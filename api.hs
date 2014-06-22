@@ -1,12 +1,12 @@
--- TODO: Change some of the Int -> Data.Word.Word32 if its supposed to be uint32
+import Data.Word (Word32)
 
 data SourceLocation = SourceLocation { source :: Maybe String
                                      , start :: Int
                                      , end :: Int
                                      } deriving (Show, Eq, Ord)
 
-data Position = Position { line :: Int
-                         , column :: Int
+data Position = Position { line :: Word32 -- TODO add the >= 1 to the type
+                         , column :: Word32
                          } deriving (Show, Eq, Ord)
 
 data Function = Function (Maybe Identifier) Lambda
@@ -77,8 +77,8 @@ data Expression = ThisExpression
                 | YieldExpression (Maybe Expression)
                 | ComprehensionExpression Expression [ComprehensionBlock] (Maybe Expression)
                 | GeneratorExpression [ComprehensionBlock] (Maybe Expression)
-                | GraphExpression Int Literal
-                | GraphIndexExpression Int
+                | GraphExpression Word32 Literal
+                | GraphIndexExpression Word32
                 | LetExpression [(Pattern, Maybe Expression)] Expression
                 | IdentifierExpression Identifier
                   deriving (Show, Eq, Ord)
@@ -96,7 +96,6 @@ data CatchClause = CatchClause Pattern (Maybe Expression) Block
 
 data ComprehensionBlock = ComprehensionBlock Pattern Expression Bool
                           deriving (Show, Eq, Ord)
-
                         
 type Identifier = String
 data Literal = StringLit | BoolLit | Null | Number | RegExp
@@ -114,4 +113,3 @@ type AssignmentOperator = String -- TODO enumerate the various operators....
 
 data UpdateOperator = Increment | Decrement
                     deriving (Show, Eq, Ord)
-
