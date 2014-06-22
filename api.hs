@@ -101,15 +101,21 @@ type Identifier = String
 data Literal = StringLit | BoolLit | Null | Number | RegExp
              deriving (Show, Eq, Ord)
 
-data UnaryOperator = Minus | Plus | Bang | Tilde | TypeOf | Void | Delete
-                   deriving (Show, Eq, Ord)
+data UnaryOperator = Negate | Positive | Bang | Tilde | TypeOf | Void | Delete
+                     deriving (Show, Eq, Ord)
 
-type BinaryOperator = String -- TODO enumerate the various operators....
+data BinaryOperator = Equal | NotEqual | Same | NotSame | LT | LTE | G | GTE 
+                    | LShift | RShift | RRShift | Plus | Minus | Times | Div 
+                    | Mod | BinOr | BinXor | BinAnd | In | InstanceOf | DotDot
+                      deriving (Show, Eq, Ord)
 
 data LogicalOperator = Or | And
                      deriving (Show, Eq, Ord)
 
-type AssignmentOperator = String -- TODO enumerate the various operators....
+data AssignmentOperator = Assign | PlusAssign | MinusAssign | MultAssign | DivAssign | ModAssign
+                        | LShiftAssign | RShiftAssign | RRShiftAssign | OrAssign | XorAssign
+                        | AndAssign
+                          deriving (Show, Eq, Ord)
 
 data UpdateOperator = Increment | Decrement
                     deriving (Show, Eq, Ord)
