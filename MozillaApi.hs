@@ -2,6 +2,8 @@ module MozillaApi
     where
 import Data.Word (Word32)
 
+type Node a = (a, SourceLocation, Position)
+
 data SourceLocation = SourceLocation { source :: Maybe String
                                      , start :: Int
                                      , end :: Int
