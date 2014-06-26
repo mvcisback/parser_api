@@ -40,30 +40,28 @@ data Lambda = Lambda {params :: [ Pattern ]
 data Block =  Block [ Statement ]
            deriving (Show, Eq)
 
-data MaybeEither a b = First a | Second b | Nothing
-                   deriving (Show, Eq)
 
 data Statement = EmptyStatement
---               | BlockStatement Block
+               | BlockStatement Block
                | ExpressionStatement Expression
                | IfStatement Expression Statement (Maybe Statement)
                | LabeledStatement Identifier Statement
                | BreakStatement (Maybe Identifier)
                | ContinueStatement (Maybe Identifier)
                | WithStatement Expression Statement
---               | SwitchStatement Expression [ SwitchCase ] Bool
+               | SwitchStatement Expression [ SwitchCase ] Bool
                | ReturnStatement (Maybe Expression)
                | ThrowStatement Expression
---               | TryStatement Block (Maybe CatchClause) [ CatchClause ] (Maybe Block)
+               | TryStatement Block (Maybe CatchClause) [ CatchClause ] (Maybe Block)
                | WhileStatement Expression Statement
                | DoWhileStatement Statement Expression
---               | ForStatement (MaybeEither VariableDecl Expression) (Maybe Expression) (Maybe Expression) Statement
---               | ForInStatement (Either VariableDecl Expression) Expression Statement Bool
---               | ForOfStatement (Either VariableDecl Expression) Expression Statement
---               | LetStatement [(Pattern, Expression)] Statement
+               | ForStatement (Maybe (Either VariableDecl Expression)) (Maybe Expression) (Maybe Expression) Statement
+               | ForInStatement (Either VariableDecl Expression) Expression Statement Bool
+               | ForOfStatement (Either VariableDecl Expression) Expression Statement
+               | LetStatement [(Pattern, Expression)] Statement
                | DebuggerStatement
---               | FunctionDeclaration Function
---               | VariableDeclaration VariableDecl
+               | FunctionDeclaration Function
+               | VariableDeclaration VariableDecl
                  deriving (Show, Eq)
 
 data VariableKind = Var | Let | Const deriving (Show, Eq)
@@ -74,28 +72,32 @@ data VariableDecl = VariableDecl [VariableDeclarator] VariableKind
 data VariableDeclarator = VariableDeclarator Pattern (Maybe Expression) deriving (Show, Eq)
 
 data ObjectKind = Init | Get | Set deriving (Show, Eq)
+data ObjectProp = ObjectProp {key :: Either Literal Identifier
+                             ,value :: Expression
+                             ,kind :: ObjectKind}
+                deriving (Show,Eq,Generic)
 
 data Expression = ThisExpression
                 | ArrayExpression [Maybe Expression]
-                | ObjectExpression [(Either Literal Identifier, Expression, ObjectKind)]
---                | FunctionExpression Function
---                | ArrowExpression Lambda
+                | ObjectExpression [ObjectProp]
+                | FunctionExpression Function
+                | ArrowExpression Lambda
                 | SequenceExpression [Expression]
---                | UnaryExpression UnaryOperator Bool Expression
---                | BinaryExpression BinaryOperator Expression Expression
---                | AssignmentExpression AssignmentOperator Expression Expression
---                | UpdateExpression UpdateOperator Expression Bool
---                | LogicalExpression LogicalOperator Expression Expression
+                | UnaryExpression UnaryOperator Bool Expression
+                | BinaryExpression BinaryOperator Expression Expression
+                | AssignmentExpression AssignmentOperator Expression Expression
+                | UpdateExpression UpdateOperator Expression Bool
+                | LogicalExpression LogicalOperator Expression Expression
                 | ConditionalExpression Expression Expression Expression
                 | NewExpression Expression [Expression]
                 | CallExpression Expression [Expression]
                 | MemberExpression Expression (Either Identifier Expression) Bool
                 | YieldExpression (Maybe Expression)
---                | ComprehensionExpression Expression [ComprehensionBlock] (Maybe Expression)
---                | GeneratorExpression [ComprehensionBlock] (Maybe Expression)
+                | ComprehensionExpression Expression [ComprehensionBlock] (Maybe Expression)
+                | GeneratorExpression Expression [ComprehensionBlock] (Maybe Expression)
                 | GraphExpression Word32 Literal
                 | GraphIndexExpression Word32
---                | LetExpression [(Pattern, Maybe Expression)] Expression
+                | LetExpression [(Pattern, Maybe Expression)] Expression
                 | IdentifierExpression Identifier
                   deriving (Show, Eq)
 
