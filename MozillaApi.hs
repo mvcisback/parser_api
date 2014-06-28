@@ -35,13 +35,13 @@ data Lambda = Lambda {params :: [ Pattern ]
                      , rest :: Maybe Identifier
                      , body :: Either Block Expression
                      , generator :: Bool
-                     , expression :: Bool } deriving  (Show, Eq)
+                     , expression :: Bool } deriving  (Show, Eq, Generic)
 
 data Block =  Block [ Statement ]
            deriving (Show, Eq)
 
 
-data Statement = EmptyStatement
+data Statement = EmptyStatement 
                | BlockStatement Block
                | ExpressionStatement Expression
                | IfStatement Expression Statement (Maybe Statement)
@@ -52,9 +52,9 @@ data Statement = EmptyStatement
                | SwitchStatement Expression [ SwitchCase ] Bool
                | ReturnStatement (Maybe Expression)
                | ThrowStatement Expression
-               | TryStatement Block (Maybe CatchClause) [ CatchClause ] (Maybe Block)
-               | WhileStatement Expression Statement
-               | DoWhileStatement Statement Expression
+               | TryStatement Block (Maybe CatchClause) [ CatchClause ] (Maybe Block) 
+               | WhileStatement Expression Statement 
+               | DoWhileStatement Statement Expression 
                | ForStatement (Maybe (Either VariableDecl Expression)) (Maybe Expression) (Maybe Expression) Statement
                | ForInStatement (Either VariableDecl Expression) Expression Statement Bool
                | ForOfStatement (Either VariableDecl Expression) Expression Statement
@@ -99,6 +99,7 @@ data Expression = ThisExpression
                 | GraphIndexExpression Word32
                 | LetExpression [(Pattern, Maybe Expression)] Expression
                 | IdentifierExpression Identifier
+                | LiteralExpression Literal
                   deriving (Show, Eq)
 
 data Pattern = ObjectPattern [(Either Literal Identifier,Pattern)]

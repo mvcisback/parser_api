@@ -1,10 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-import Data.Aeson (FromJSON,ToJSON,(.:),object,(.=))
+import Data.Aeson (FromJSON,ToJSON,(.:),object,(.=),(.:?))
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as B
-import Control.Applicative ((<$>),(<*>),empty)
+import Control.Applicative ((<$>),(<*>),empty, pure)
 import Data.Text (Text)
+import qualified Data.HashMap.Strict as H
+import Data.Maybe (fromJust)
 
 import MozillaApi
 
@@ -100,7 +102,7 @@ instance ToJSON Expression where
                                                                         , "left" .= lft
                                                                         , "right" .= rgt]
 
-                                             
+
     toJSON (ConditionalExpression e1 e2 e3) = object' "ConditionalExpression" ["test" .= e1
                                                                               , "consequent" .= e2
                                                                               , "alternate" .= e3
@@ -152,7 +154,7 @@ instance ToJSON BinaryOperator where
                       NotSame -> "!=="
                       MozillaApi.LT -> "<"
                       MozillaApi.LTE -> "<="
-                      MozillaApi.GT -> ">"    
+                      MozillaApi.GT -> ">"
                       MozillaApi.GTE -> ">="
                       LShift -> "<<"
                       RShift -> ">>"
@@ -186,7 +188,7 @@ instance ToJSON AssignmentOperator where
                       ModAssign -> "%="
                       LShiftAssign -> "<<="
                       RShiftAssign -> ">>="
-                      RRShiftAssign -> ">>="
+                      RRShiftAssign -> ">>>="
                       OrAssign -> "|="
                       XorAssign -> "^="
                       AndAssign -> "&="
@@ -229,11 +231,15 @@ instance ToJSON ComprehensionBlock where
                                                                             ,"right" .= rgt
                                                                             ,"each" .= each]
 
+instance ToJSON Program where
+    toJSON (Program body) = object' "Program" ["body" .= body]
 
 ------------------------------------------------------------------------
 
 instance FromJSON Position
 instance FromJSON SourceLocation
+instance FromJSON ObjectProp
+instance FromJSON Lambda
 
 instance FromJSON Literal where
     parseJSON (A.Object v) = makeLit <$> v .: "value"
@@ -246,6 +252,315 @@ instance FromJSON Literal where
                   | otherwise = Null
     parseJSON _ = empty
 
-instance FromJSON Identifier where
-    parseJSON (A.Object v) = Identifier <$> v .: "name"
+
+instance FromJSON UnaryOperator where
+    parseJSON (A.Object v) = makeOp <$> v .: "value"
+        where makeOp :: Text -> UnaryOperator
+              makeOp val
+                  | val == "-" = Negate
+                  | val == "+" = Positive
+                  | val == "!" = Bang
+                  | val == "~" = Tilde
+                  | val == "typeof" = TypeOf
+                  | val == "void" = Void
+                  | val == "delete" = Delete
     parseJSON _ = empty
+
+instance FromJSON BinaryOperator where
+    parseJSON (A.Object v) = makeOp <$> v .: "value"
+        where makeOp :: Text -> BinaryOperator
+              makeOp val
+                  | val == "==" = Equal
+                  | val == "!=" = NotEqual
+                  | val == "===" = Same
+                  | val == "!==" = NotSame
+                  | val == "<" = MozillaApi.LT
+                  | val == "<=" = MozillaApi.LTE
+                  | val == ">" = MozillaApi.GT
+                  | val == ">=" = MozillaApi.GTE
+                  | val == "<<" =  LShift
+                  | val == ">>" = RShift
+                  | val == ">>>" = RRShift
+                  | val == "+" = Plus
+                  | val == "-" = Minus
+                  | val == "*" = Times
+                  | val == "/" = Div
+                  | val == "%" = Mod
+                  | val == "|" = BinOr
+                  | val == "^" = BinXor
+                  | val == "&" = BinAnd
+                  | val == "in" = In
+                  | val == "instanceof" = InstanceOf
+                  | val == ".." = DotDot
+    parseJSON _ = empty
+
+instance FromJSON LogicalOperator where
+    parseJSON (A.Object v) = makeOp <$> v .: "value"
+        where makeOp :: Text -> LogicalOperator
+              makeOp val
+                  | val == "||" = Or
+                  | val == "&&" = And
+    parseJSON _ = empty
+
+instance FromJSON AssignmentOperator where
+    parseJSON (A.Object v) = makeOp <$> v .: "value"
+        where makeOp :: Text -> AssignmentOperator
+              makeOp val
+                  | val == "=" = Assign
+                  | val == "+=" = PlusAssign
+                  | val == "-=" = MinusAssign
+                  | val == "*=" = MultAssign
+                  | val == "/=" = DivAssign
+                  | val == "%=" = ModAssign
+                  | val == "<<=" = LShiftAssign
+                  | val == ">>=" = RShiftAssign
+                  | val == ">>>=" =  RRShiftAssign
+                  | val == "|=" = OrAssign
+                  | val == "^=" = XorAssign
+                  | val == "&=" = AndAssign
+    parseJSON _ = empty
+
+instance FromJSON UpdateOperator where
+    parseJSON (A.Object v) = makeOp <$> v .: "value"
+        where makeOp :: Text -> UpdateOperator
+              makeOp val
+                  | val == "++" = Increment
+                  | val == "--" = Decrement
+    parseJSON _ = empty
+
+
+instance FromJSON VariableKind where
+    parseJSON (A.Object v) = makeOp <$> v .: "value"
+        where makeOp :: Text -> VariableKind
+              makeOp val
+                  | val == "var" = Var
+                  | val == "let" = Let
+                  | val == "const" = Const
+    parseJSON _ = empty
+
+instance FromJSON ObjectKind where
+    parseJSON (A.Object v) = makeOp <$> v .: "value"
+        where makeOp :: Text -> ObjectKind
+              makeOp val
+                  | val == "init" = Init
+                  | val == "get" = Get
+                  | val == "set" = Set
+    parseJSON _ = empty
+
+parseNode handler (A.Object v)
+        | type' == Nothing = empty
+        | otherwise = handler (fromJust type') v
+        where type' = H.lookup ("type" :: Text) v
+parseNode _ _ = empty
+
+instance FromJSON Identifier where
+    parseJSON = parseNode handler
+        where handler type' v
+                  | type' == "Identifier" = Identifier <$> v .: "name"
+                  | otherwise = empty
+
+instance FromJSON Statement where
+    parseJSON = parseNode handler
+        where handler type' v
+                  | type' == "EmptyStatement" = pure EmptyStatement
+                  | type' == "ExpressionStatement" = ExpressionStatement <$> v .: "expression"
+                  | type' == "BlockStatement" = BlockStatement <$> A.parseJSON (A.Object v)
+                  | type' == "IfStatement" = IfStatement
+                                             <$> v .: "test"
+                                             <*> v .: "consequent"
+                                             <*> v .:? "alternate"
+                  | type' == "LabeledStatement" = LabeledStatement
+                                                  <$> v .: "label"
+                                                  <*> v .: "body"
+                  | type' == "BreakStatement" = BreakStatement <$> v .:? "label"
+                  | type' == "ContinueStatement" = ContinueStatement <$> v .:? "label"
+                  | type' == "WithStatement" = WithStatement 
+                                               <$> v .: "object"
+                                               <*> v .: "body"
+                  | type' == "SwitchStatement" = SwitchStatement
+                                                 <$> v .: "discriminant"
+                                                 <*> v .: "cases"
+                                                 <*> v .: "lexical"
+                  | type' == "ReturnStatement" = ReturnStatement <$> v .:? "argument"
+                  | type' == "ThrowStatement" = ThrowStatement <$> v .: "argument"
+                  | type' == "TryStatement" = TryStatement
+                                              <$> v .: "block"
+                                              <*> v .:? "handler"
+                                              <*> v .: "guardedHandlers"
+                                              <*> v .:? "finalizer"
+                                              
+                  | type' == "WhileStatement" = WhileStatement 
+                                                <$> v .: "test"
+                                                <*> v .: "body"
+                  | type' == "DoWhileStatement" = DoWhileStatement
+                                                  <$> v .: "body"
+                                                  <*> v .: "test"
+                  | type' == "ForStatement" = ForStatement
+                                              <$> v .:? "init"
+                                              <*> v .:? "test"
+                                              <*> v .:? "update"
+                                              <*> v .: "body"
+                  | type' == "ForInStatement" = ForInStatement
+                                              <$> v .: "left"
+                                              <*> v .: "right"
+                                              <*> v .: "body"
+                                              <*> v .: "each"
+                  | type' == "ForOfStatement" = ForOfStatement
+                                                <$> v .: "left"
+                                                <*> v .: "right"
+                                                <*> v .: "body"
+                  | type' == "LetStatement" = LetStatement
+                                              <$> v .: "head"
+                                              <*> v .: "body"
+                  | type' == "DebuggerStatement" = pure DebuggerStatement
+                  | type' == "FunctionDeclaration" = FunctionDeclaration
+                                                     <$> A.parseJSON (A.Object v)
+                  | type' == "VariableDeclaration" = VariableDeclaration
+                                                     <$> A.parseJSON (A.Object v)
+                  | otherwise = empty
+
+instance FromJSON Expression where
+    parseJSON = parseNode handler
+        where handler type' v
+                  | type' == "ThisExpression" = pure ThisExpression
+                  | type' == "ArrayExpression" = ArrayExpression <$> v .: "elements"
+                  | type' == "ObjectExpression" = ObjectExpression <$> v .: "properties"
+                  | type' == "FunctionExpression" = FunctionExpression
+                                                    <$> A.parseJSON (A.Object v)
+                  | type' == "ArrowExpression" = ArrayExpression
+                                                    <$> A.parseJSON (A.Object v)
+                  | type' == "SequenceExpression" = SequenceExpression <$> v .: "expressions"
+                  | type' == "UnaryExpression" = UnaryExpression
+                                                 <$> v .: "operator"
+                                                 <*> v .: "prefix"
+                                                 <*> v .: "argument"
+                  | type' == "BinaryExpression" = BinaryExpression
+                                                  <$> v .: "operator"
+                                                  <*> v .: "left"
+                                                  <*> v .: "right"
+                  | type' == "AssignmentExpression" = AssignmentExpression
+                                                      <$> v .: "operator"
+                                                      <*> v .: "left"
+                                                      <*> v .: "right"
+                  | type' == "UpdateExpression" = UpdateExpression
+                                                  <$> v .: "operator"
+                                                  <*> v .: "argument"
+                                                  <*> v .: "prefix"
+                  | type' == "LogicalExpression" = LogicalExpression
+                                                   <$> v .: "operator"
+                                                   <*> v .: "left"
+                                                   <*> v .: "right"
+                  | type' == "ConditionalExpression" = ConditionalExpression
+                                                       <$> v .: "test"
+                                                       <*> v .: "alternate"
+                                                       <*> v .: "consequent"
+                  | type' == "NewExpression" = NewExpression
+                                               <$> v .: "callee"
+                                               <*> v .: "arguments"
+                  | type' == "CallExpression" = CallExpression
+                                                <$> v.: "callee"
+                                                <*> v .: "arguments"
+                  | type' == "MemberExpression" = MemberExpression
+                                                  <$> v .: "object"
+                                                  <*> v .: "property"
+                                                  <*> v .: "computed"
+                  | type' == "YieldExpression" = YieldExpression <$> v .: "argument"
+                  | type' == "ComprehensionExpression" = ComprehensionExpression
+                                                         <$> v .: "body"
+                                                         <*> v .: "blocks"
+                                                         <*> v .: "filter"
+                  | type' == "GeneratorExpression" = GeneratorExpression
+                                                     <$> v .: "body"
+                                                     <*> v .: "blocks"
+                                                     <*> v .: "filter"
+                  | type' == "GraphExpression" = GraphExpression
+                                                 <$> v .: "index"
+                                                 <*> v .: "expression"
+                  | type' == "GraphIndexExpression" = GraphIndexExpression
+                                                      <$> v .: "index"
+                  | type' == "LetExpression" = LetExpression
+                                               <$> v .: "head"
+                                               <*> v .: "body"
+                  | type' == "IdentifierExpression" = IdentifierExpression
+                                                      <$> A.parseJSON (A.Object v)
+                  | type' == "LiteralExpression" = LiteralExpression
+                                                   <$> A.parseJSON (A.Object v)
+                  | otherwise = empty
+
+
+instance FromJSON Pattern where
+    parseJSON = parseNode handler
+        where handler type' v
+                  | type' == "ObjectPattern" = ObjectPattern <$> v .: "properties"
+                  | type' == "ArrayPattern" = ArrayPattern <$> v .: "elements"
+                  | type' == "IdentifierPattern" = IdentifierPattern
+                                                   <$> A.parseJSON (A.Object v)
+                  | otherwise = empty
+
+instance FromJSON SwitchCase where
+    parseJSON = parseNode handler
+        where handler type' v
+                  | type' == "SwitchCase" = SwitchCase
+                                             <$> v .:? "test"
+                                             <*> v .: "consequent"
+                  | otherwise = empty
+
+instance FromJSON ComprehensionBlock where
+    parseJSON = parseNode handler
+        where handler type' v
+                  | type' == "ComprehensionBlock" = ComprehensionBlock
+                                                    <$> v .: "left"
+                                                    <*> v .: "right"
+                                                    <*> v .: "each"
+                  | otherwise = empty
+
+instance FromJSON VariableDeclarator where
+    parseJSON = parseNode handler
+        where handler type' v
+                  | type' == "VariableDeclarator" = VariableDeclarator
+                                                    <$> v .: "id"
+                                                    <*> v .: "init"
+                  | otherwise = empty
+
+instance FromJSON VariableDecl where
+    parseJSON = parseNode handler
+        where handler type' v
+                  | type' == "VariableDeclaration" = VariableDecl
+                                                     <$> v .: "declarations"
+                                                     <*> v .: "kind"
+                  | otherwise = empty
+
+instance FromJSON Block where
+    parseJSON = parseNode handler
+        where handler type' v
+                  | type' == "BlockStatement" = Block  <$> v .: "body"
+                  | otherwise = empty
+
+instance FromJSON CatchClause where
+    parseJSON = parseNode handler
+        where handler type' v
+                  | type' == "CatchClause" = CatchClause 
+                                             <$> v .: "param"
+                                             <*> v .: "guard"
+                                             <*> v .: "body"
+                  | otherwise = empty
+
+instance FromJSON Function where
+    parseJSON (A.Object v) = mkFunc
+                             <$> v .:? "id"
+                             <*> v .: "params"
+                             <*> v .: "defaults"
+                             <*> v .: "rest"
+                             <*> v .: "body"
+                             <*> v .: "generator"
+                             <*> v .: "expression"
+        where mkFunc id' p def rest body gen exp =
+                  Function id' (Lambda p def rest body gen exp)
+    parseJSON _ = empty
+                             
+    
+instance FromJSON Program where
+    parseJSON = parseNode handler
+        where handler type' v
+                  | type' == "Program" = Program <$> v .: "body"
+                  | otherwise = empty
