@@ -24,12 +24,16 @@ instance ToJSON SourceLocation
 instance ToJSON Position
 instance ToJSON ObjectProp
 
+instance (ToJSON a) => ToJSON (Node a) where
+    toJSON (Node x src) = case A.toJSON x of
+                            A.Object v -> A.Object (H.insert "loc" (A.toJSON src) v)
+
 instance ToJSON Identifier where
-    toJSON (Identifier name) = object [ "name" .= name ]
+    toJSON (Identifier name) = object' "Identifier" [ "name" .= name ]
 
 
 instance ToJSON Literal where
-    toJSON lit = object ["value" .= (val :: Text)]
+    toJSON lit = object' "Literal" ["value" .= (val :: Text)]
         where val = case lit of
                       StringLit -> "string"
                       BoolLit -> "boolean"
@@ -74,7 +78,7 @@ instance ToJSON Statement where
     toJSON (LetStatement head body) = object' "LetStatement" [ "head" .= head
                                                              , "body" .= body]
     toJSON DebuggerStatement = object' "DebuggerStatement" []
-    toJSON (FunctionDeclaration (Function name lambda)) = object' "FunctionDeclaration" fields
+    toJSON (FunctionDeclaration (Node (Function name lambda) src)) = object' "FunctionDeclaration" fields
         where fields = ("name" .= name):(lambdaFields lambda)
     toJSON (VariableDeclaration dcl) = A.toJSON dcl
 
@@ -240,6 +244,10 @@ instance FromJSON Position
 instance FromJSON SourceLocation
 instance FromJSON ObjectProp
 instance FromJSON Lambda
+
+instance (FromJSON a) => FromJSON (Node a) where
+    parseJSON obj@(A.Object v) = Node <$> A.parseJSON obj <*> v .: "loc" 
+    parseJSON _ = empty
 
 instance FromJSON Literal where
     parseJSON (A.Object v) = makeLit <$> v .: "value"

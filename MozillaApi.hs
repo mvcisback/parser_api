@@ -7,7 +7,13 @@ import Data.Word (Word32)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 
-type Node a = (a, SourceLocation, Position)
+data Node a = Node a SourceLocation
+              deriving (Show, Eq, Generic)
+type ExprNode = Node Expression
+type StateNode = Node Statement
+type BlkNode = Node Block
+type IdNode = Node Identifier
+type PatNode = Node Pattern
 
 data SourceLocation = SourceLocation { source :: Maybe Text
                                      , start :: Position
@@ -42,25 +48,25 @@ data Block =  Block [ Statement ]
 
 
 data Statement = EmptyStatement 
-               | BlockStatement Block
-               | ExpressionStatement Expression
-               | IfStatement Expression Statement (Maybe Statement)
-               | LabeledStatement Identifier Statement
-               | BreakStatement (Maybe Identifier)
-               | ContinueStatement (Maybe Identifier)
-               | WithStatement Expression Statement
-               | SwitchStatement Expression [ SwitchCase ] Bool
-               | ReturnStatement (Maybe Expression)
-               | ThrowStatement Expression
-               | TryStatement Block (Maybe CatchClause) [ CatchClause ] (Maybe Block) 
-               | WhileStatement Expression Statement 
-               | DoWhileStatement Statement Expression 
-               | ForStatement (Maybe (Either VariableDecl Expression)) (Maybe Expression) (Maybe Expression) Statement
-               | ForInStatement (Either VariableDecl Expression) Expression Statement Bool
-               | ForOfStatement (Either VariableDecl Expression) Expression Statement
-               | LetStatement [(Pattern, Expression)] Statement
+               | BlockStatement BlkNode
+               | ExpressionStatement ExprNode
+               | IfStatement ExprNode StateNode (Maybe StateNode)
+               | LabeledStatement IdNode StateNode
+               | BreakStatement (Maybe IdNode)
+               | ContinueStatement (Maybe IdNode)
+               | WithStatement ExprNode StateNode
+               | SwitchStatement ExprNode [ (Node SwitchCase) ] Bool
+               | ReturnStatement (Maybe ExprNode)
+               | ThrowStatement ExprNode
+               | TryStatement BlkNode (Maybe (Node CatchClause)) [ (Node CatchClause) ] (Maybe BlkNode)
+               | WhileStatement ExprNode StateNode
+               | DoWhileStatement StateNode ExprNode
+               | ForStatement ((Maybe (Either (Node VariableDecl) ExprNode))) (Maybe ExprNode) (Maybe ExprNode) StateNode
+               | ForInStatement (Either (Node VariableDecl) ExprNode) ExprNode StateNode Bool
+               | ForOfStatement (Either (Node VariableDecl) ExprNode) ExprNode StateNode
+               | LetStatement [(PatNode, ExprNode)] StateNode
                | DebuggerStatement
-               | FunctionDeclaration Function
+               | FunctionDeclaration (Node Function)
                | VariableDeclaration VariableDecl
                  deriving (Show, Eq)
 
