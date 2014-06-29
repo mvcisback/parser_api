@@ -13,12 +13,6 @@ import MozillaApi
 
 writeType val = "type" .= (val :: Text)
 object' name = object . ([writeType name] ++)
-lambdaFields (Lambda params defaults rest body gen exp) = ["params" .= params
-                                                          ,"defaults" .= defaults
-                                                          ,"rest" .= rest
-                                                          ,"body" .= body
-                                                          ,"generator" .= gen
-                                                          ,"expression" .= exp]
 
 instance ToJSON SourceLocation
 instance ToJSON Position
@@ -250,91 +244,82 @@ instance (FromJSON a) => FromJSON (Node a) where
     parseJSON obj@(A.Object v) = Node <$> A.parseJSON obj <*> v .: "loc" 
     parseJSON _ = empty
 
+lookup'' :: [(Text, a)] -> Text -> Maybe a
+lookup'' = flip lookup
+
+lookup' lis val = case lookup'' lis val of 
+                     Just builder -> builder -- TODO make this safe
+
 instance FromJSON Literal where
-    parseJSON (A.Object v) = makeLit <$> v .: "value"
-        where makeLit :: Text -> Literal
-              makeLit val
-                  | val == "string" = StringLit
-                  | val == "boolean" = BoolLit
-                  | val == "number" = Number
-                  | val == "RegExp" = RegExp
-                  | otherwise = Null
+    parseJSON (A.Object v) = lookup' lis <$> v .: "value"
+        where  lis = [("string", StringLit)
+                     ,("boolean",BoolLit)
+                     ,("number",Number)
+                     ,("RegExp",RegExp)]
     parseJSON _ = empty
 
 
 instance FromJSON UnaryOperator where
-    parseJSON (A.Object v) = makeOp <$> v .: "value"
-        where makeOp :: Text -> UnaryOperator
-              makeOp val
-                  | val == "-" = Negate
-                  | val == "+" = Positive
-                  | val == "!" = Bang
-                  | val == "~" = Tilde
-                  | val == "typeof" = TypeOf
-                  | val == "void" = Void
-                  | val == "delete" = Delete
+    parseJSON (A.Object v) = lookup' lis <$> v .: "value"
+        where lis = [("-",Negate)
+                    ,("+",Positive)
+                    ,("!",Bang)
+                    ,("~", Tilde)
+                    ,("typeof",TypeOf)
+                    ,("void",Void)
+                    ,("delete",Delete)]
     parseJSON _ = empty
 
 instance FromJSON BinaryOperator where
-    parseJSON (A.Object v) = makeOp <$> v .: "value"
-        where makeOp :: Text -> BinaryOperator
-              makeOp val
-                  | val == "==" = Equal
-                  | val == "!=" = NotEqual
-                  | val == "===" = Same
-                  | val == "!==" = NotSame
-                  | val == "<" = MozillaApi.LT
-                  | val == "<=" = MozillaApi.LTE
-                  | val == ">" = MozillaApi.GT
-                  | val == ">=" = MozillaApi.GTE
-                  | val == "<<" =  LShift
-                  | val == ">>" = RShift
-                  | val == ">>>" = RRShift
-                  | val == "+" = Plus
-                  | val == "-" = Minus
-                  | val == "*" = Times
-                  | val == "/" = Div
-                  | val == "%" = Mod
-                  | val == "|" = BinOr
-                  | val == "^" = BinXor
-                  | val == "&" = BinAnd
-                  | val == "in" = In
-                  | val == "instanceof" = InstanceOf
-                  | val == ".." = DotDot
+    parseJSON (A.Object v) = lookup' lis <$> v .: "value"
+        where lis = [("==",Equal)
+                    ,("!=",NotEqual)
+                    ,("===",Same)
+                    ,("!==",NotSame)
+                    ,("<",MozillaApi.LT)
+                    ,("<=",MozillaApi.LTE)
+                    ,(">",MozillaApi.GT)
+                    ,(">=",MozillaApi.GTE)
+                    ,("<<", LShift)
+                    ,(">>",RShift)
+                    ,(">>>",RRShift)
+                    ,("+",Plus)
+                    ,("-",Minus)
+                    ,("*",Times)
+                    ,("/",Div)
+                    ,("%",Mod)
+                    ,("|",BinOr)
+                    ,("^",BinXor)
+                    ,("&",BinAnd)
+                    ,("in",In)
+                    ,("instanceof",InstanceOf)
+                    ,("..",DotDot)]
     parseJSON _ = empty
 
 instance FromJSON LogicalOperator where
-    parseJSON (A.Object v) = makeOp <$> v .: "value"
-        where makeOp :: Text -> LogicalOperator
-              makeOp val
-                  | val == "||" = Or
-                  | val == "&&" = And
+    parseJSON (A.Object v) = lookup' lis <$> v .: "value"
+        where lis = [("||",Or), ("&&",And)]
     parseJSON _ = empty
 
 instance FromJSON AssignmentOperator where
-    parseJSON (A.Object v) = makeOp <$> v .: "value"
-        where makeOp :: Text -> AssignmentOperator
-              makeOp val
-                  | val == "=" = Assign
-                  | val == "+=" = PlusAssign
-                  | val == "-=" = MinusAssign
-                  | val == "*=" = MultAssign
-                  | val == "/=" = DivAssign
-                  | val == "%=" = ModAssign
-                  | val == "<<=" = LShiftAssign
-                  | val == ">>=" = RShiftAssign
-                  | val == ">>>=" =  RRShiftAssign
-                  | val == "|=" = OrAssign
-                  | val == "^=" = XorAssign
-                  | val == "&=" = AndAssign
+    parseJSON (A.Object v) = lookup' lis <$> v .: "value"
+        where lis =  [("=",Assign)
+                     ,("+=",PlusAssign)
+                     ,("-=",MinusAssign)
+                     ,("*=",MultAssign)
+                     ,("/=",DivAssign)
+                     ,("%=",ModAssign)
+                     ,("<<=",LShiftAssign)
+                     ,(">>=",RShiftAssign)
+                     ,(">>>=", RRShiftAssign)
+                     ,("|=",OrAssign)
+                     ,("^=",XorAssign)
+                     ,("&=",AndAssign)]
     parseJSON _ = empty
 
 instance FromJSON UpdateOperator where
-    parseJSON (A.Object v) = makeOp <$> v .: "value"
-        where makeOp :: Text -> UpdateOperator
-              makeOp val
-                  | val == "++" = Increment
-                  | val == "--" = Decrement
+    parseJSON (A.Object v) = lookup' lis <$> v .: "value"
+        where lis = [("++",Increment), ("--",Decrement)]
     parseJSON _ = empty
 
 
