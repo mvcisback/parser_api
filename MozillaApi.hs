@@ -86,8 +86,8 @@ data ObjectProp = ObjectProp {key :: Either (Node Literal) IdNode
 data Expression = ThisExpression
                 | ArrayExpression [Maybe ExprNode]
                 | ObjectExpression [ObjectProp]
-                | FunctionExpression Function
-                | ArrowExpression Lambda
+                | FunctionExpression (Node Function)
+                | ArrowExpression (Node Lambda)
                 | SequenceExpression [ExprNode]
                 | UnaryExpression UnaryOperator Bool ExprNode
                 | BinaryExpression BinaryOperator ExprNode ExprNode

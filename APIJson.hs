@@ -78,17 +78,18 @@ instance ToJSON Statement where
     toJSON (LetStatement head body) = object' "LetStatement" [ "head" .= head
                                                              , "body" .= body]
     toJSON DebuggerStatement = object' "DebuggerStatement" []
-    toJSON (FunctionDeclaration (Node (Function name lambda) src)) = object' "FunctionDeclaration" fields
-        where fields = ("name" .= name):(lambdaFields lambda)
+    toJSON (FunctionDeclaration func) = A.Object (H.insert "type" "FunctionDeclaration" v)
+        where (A.Object v) = A.toJSON v
     toJSON (VariableDeclaration dcl) = A.toJSON dcl
 
 instance ToJSON Expression where
     toJSON ThisExpression = object' "ThisExpression" []
     toJSON (ArrayExpression maybe_exps) = object' "ArrayExpression" ["elements" .= maybe_exps]
     toJSON (ObjectExpression props) = object' "ObjectExpression" ["properties" .= props]
-    toJSON (FunctionExpression (Function name lambda)) = object' "FunctionExpression" fields
-        where fields = ("name" .= name):(lambdaFields lambda)
-    toJSON (ArrowExpression lambda) = object' "ArrowExpression" (lambdaFields lambda)
+    toJSON (FunctionExpression func) = A.Object (H.insert "type" "FunctionExpression" v)
+        where (A.Object v) = A.toJSON v
+    toJSON (ArrowExpression lambda) = A.Object (H.insert "type" "ArrowExpression" v)
+        where (A.Object v) = A.toJSON v
     toJSON (SequenceExpression exps) = object' "SequenceExpression" ["expressions" .= exps]
     toJSON (UnaryExpression op prefix arg) = object' "UnaryExpression" [ "operator" .= op
                                                                        , "prefix" .= prefix
@@ -433,10 +434,8 @@ instance FromJSON Expression where
                   | type' == "ThisExpression" = pure ThisExpression
                   | type' == "ArrayExpression" = ArrayExpression <$> v .: "elements"
                   | type' == "ObjectExpression" = ObjectExpression <$> v .: "properties"
-                  | type' == "FunctionExpression" = FunctionExpression
-                                                    <$> A.parseJSON (A.Object v)
-                  | type' == "ArrowExpression" = ArrayExpression
-                                                    <$> A.parseJSON (A.Object v)
+                  | type' == "FunctionExpression" = FunctionExpression <$> A.parseJSON (A.Object v)
+                  | type' == "ArrowExpression" = ArrayExpression <$> A.parseJSON (A.Object v)
                   | type' == "SequenceExpression" = SequenceExpression <$> v .: "expressions"
                   | type' == "UnaryExpression" = UnaryExpression
                                                  <$> v .: "operator"
@@ -554,16 +553,9 @@ instance FromJSON CatchClause where
                   | otherwise = empty
 
 instance FromJSON Function where
-    parseJSON (A.Object v) = mkFunc
+    parseJSON obj@(A.Object v) = Function
                              <$> v .:? "id"
-                             <*> v .: "params"
-                             <*> v .: "defaults"
-                             <*> v .: "rest"
-                             <*> v .: "body"
-                             <*> v .: "generator"
-                             <*> v .: "expression"
-        where mkFunc id' p def rest body gen exp =
-                  Function id' (Lambda p def rest body gen exp)
+                             <*> A.parseJSON obj
     parseJSON _ = empty
                              
     
