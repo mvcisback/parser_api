@@ -67,45 +67,45 @@ data Statement = EmptyStatement
                | LetStatement [(PatNode, ExprNode)] StateNode
                | DebuggerStatement
                | FunctionDeclaration (Node Function)
-               | VariableDeclaration VariableDecl
+               | VariableDeclaration (Node VariableDecl)
                  deriving (Show, Eq)
 
 data VariableKind = Var | Let | Const deriving (Show, Eq)
 
-data VariableDecl = VariableDecl [VariableDeclarator] VariableKind
+data VariableDecl = VariableDecl [Node VariableDeclarator] VariableKind
                     deriving (Show, Eq)
 
-data VariableDeclarator = VariableDeclarator Pattern (Maybe Expression) deriving (Show, Eq)
+data VariableDeclarator = VariableDeclarator PatNode (Maybe ExprNode) deriving (Show, Eq)
 
 data ObjectKind = Init | Get | Set deriving (Show, Eq)
-data ObjectProp = ObjectProp {key :: Either Literal Identifier
-                             ,value :: Expression
+data ObjectProp = ObjectProp {key :: Either (Node Literal) IdNode
+                             ,value :: ExprNode
                              ,kind :: ObjectKind}
                 deriving (Show,Eq,Generic)
 
 data Expression = ThisExpression
-                | ArrayExpression [Maybe Expression]
+                | ArrayExpression [Maybe ExprNode]
                 | ObjectExpression [ObjectProp]
                 | FunctionExpression Function
                 | ArrowExpression Lambda
-                | SequenceExpression [Expression]
-                | UnaryExpression UnaryOperator Bool Expression
-                | BinaryExpression BinaryOperator Expression Expression
-                | AssignmentExpression AssignmentOperator Expression Expression
-                | UpdateExpression UpdateOperator Expression Bool
-                | LogicalExpression LogicalOperator Expression Expression
-                | ConditionalExpression Expression Expression Expression
-                | NewExpression Expression [Expression]
-                | CallExpression Expression [Expression]
-                | MemberExpression Expression (Either Identifier Expression) Bool
-                | YieldExpression (Maybe Expression)
-                | ComprehensionExpression Expression [ComprehensionBlock] (Maybe Expression)
-                | GeneratorExpression Expression [ComprehensionBlock] (Maybe Expression)
-                | GraphExpression Word32 Literal
+                | SequenceExpression [ExprNode]
+                | UnaryExpression UnaryOperator Bool ExprNode
+                | BinaryExpression BinaryOperator ExprNode ExprNode
+                | AssignmentExpression AssignmentOperator ExprNode ExprNode
+                | UpdateExpression UpdateOperator ExprNode Bool
+                | LogicalExpression LogicalOperator ExprNode ExprNode
+                | ConditionalExpression ExprNode ExprNode ExprNode
+                | NewExpression ExprNode [ExprNode]
+                | CallExpression ExprNode [ExprNode]
+                | MemberExpression ExprNode (Either IdNode ExprNode) Bool
+                | YieldExpression (Maybe ExprNode)
+                | ComprehensionExpression ExprNode [Node ComprehensionBlock] (Maybe ExprNode)
+                | GeneratorExpression ExprNode [Node ComprehensionBlock] (Maybe ExprNode)
+                | GraphExpression Word32 (Node Literal)
                 | GraphIndexExpression Word32
-                | LetExpression [(Pattern, Maybe Expression)] Expression
-                | IdentifierExpression Identifier
-                | LiteralExpression Literal
+                | LetExpression [(PatNode, Maybe ExprNode)] ExprNode
+                | IdentifierExpression IdNode
+                | LiteralExpression (Node Literal)
                   deriving (Show, Eq)
 
 data Pattern = ObjectPattern [(Either Literal Identifier,Pattern)]
