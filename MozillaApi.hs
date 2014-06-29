@@ -24,8 +24,8 @@ data Position = Position { line :: Word32 -- TODO add the >= 1 to the type
                          , column :: Word32
                          } deriving (Show,Eq,Generic)
 
-newtype Identifier = Identifier Text
-    deriving (Show,Eq)
+data Identifier = Identifier Text
+                  deriving (Show,Eq)
 
 data Literal = StringLit | BoolLit | Null | Number | RegExp
              deriving (Show, Eq)

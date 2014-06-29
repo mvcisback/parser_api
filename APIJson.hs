@@ -1,5 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+module APIJson
+    where
+
 import Data.Aeson (FromJSON,ToJSON,(.:),object,(.=),(.:?))
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as B

@@ -1,0 +1,9 @@
+{
+    "type": "EmptyStatement",
+    "loc":
+    {
+        "start": 4,
+        "end": 5,
+        "name": "x"
+    }
+}
