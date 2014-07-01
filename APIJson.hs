@@ -266,7 +266,7 @@ instance FromJSON Literal where
 
 
 instance FromJSON UnaryOperator where
-    parseJSON (A.Object v) = lookup' lis <$> v .: "value"
+    parseJSON val@(A.String _) = lookup' lis <$> A.parseJSON val
         where lis = [("-",Negate)
                     ,("+",Positive)
                     ,("!",Bang)
@@ -277,7 +277,7 @@ instance FromJSON UnaryOperator where
     parseJSON _ = empty
 
 instance FromJSON BinaryOperator where
-    parseJSON (A.Object v) = lookup' lis <$> v .: "value"
+    parseJSON val@(A.String _) = lookup' lis <$> A.parseJSON val
         where lis = [("==",Equal)
                     ,("!=",NotEqual)
                     ,("===",Same)
@@ -303,12 +303,12 @@ instance FromJSON BinaryOperator where
     parseJSON _ = empty
 
 instance FromJSON LogicalOperator where
-    parseJSON (A.Object v) = lookup' lis <$> v .: "value"
+    parseJSON val@(A.String v) = lookup' lis <$> A.parseJSON val
         where lis = [("||",Or), ("&&",And)]
     parseJSON _ = empty
 
 instance FromJSON AssignmentOperator where
-    parseJSON (A.Object v) = lookup' lis <$> v .: "value"
+    parseJSON val@(A.String _) = lookup' lis <$> A.parseJSON val
         where lis =  [("=",Assign)
                      ,("+=",PlusAssign)
                      ,("-=",MinusAssign)
@@ -324,22 +324,18 @@ instance FromJSON AssignmentOperator where
     parseJSON _ = empty
 
 instance FromJSON UpdateOperator where
-    parseJSON (A.Object v) = lookup' lis <$> v .: "value"
+    parseJSON val@(A.String _) = lookup' lis <$> A.parseJSON val
         where lis = [("++",Increment), ("--",Decrement)]
     parseJSON _ = empty
 
 
 instance FromJSON VariableKind where
-    parseJSON (A.Object v) = makeOp <$> v .: "value"
-        where makeOp :: Text -> VariableKind
-              makeOp val
-                  | val == "var" = Var
-                  | val == "let" = Let
-                  | val == "const" = Const
+    parseJSON val@(A.String _) = lookup' lis <$> A.parseJSON val
+        where lis = [("var",Var) ,("let",Let) ,("const",Const)]
     parseJSON _ = empty
 
 instance FromJSON ObjectKind where
-    parseJSON (A.Object v) = makeOp <$> v .: "value"
+    parseJSON val@(A.String v) = makeOp <$> A.parseJSON val
         where makeOp :: Text -> ObjectKind
               makeOp val
                   | val == "init" = Init
@@ -484,8 +480,8 @@ instance FromJSON Pattern where
         where handler type' v
                   | type' == "ObjectPattern" = ObjectPattern <$> v .: "properties"
                   | type' == "ArrayPattern" = ArrayPattern <$> v .: "elements"
-                  | type' == "IdentifierPattern" = IdentifierPattern
-                                                   <$> A.parseJSON (A.Object v)
+                  | type' == "Identifier" = IdentifierPattern
+                                            <$> A.parseJSON (A.Object v)
                   | otherwise = empty
 
 instance FromJSON SwitchCase where
@@ -506,20 +502,12 @@ instance FromJSON ComprehensionBlock where
                   | otherwise = empty
 
 instance FromJSON VariableDeclarator where
-    parseJSON = parseNode handler
-        where handler type' v
-                  | type' == "VariableDeclarator" = VariableDeclarator
-                                                    <$> v .: "id"
-                                                    <*> v .: "init"
-                  | otherwise = empty
+    parseJSON (A.Object v) = VariableDeclarator <$> v .: "id" <*> v .:? "init"
+    parseJSON _ = empty
 
 instance FromJSON VariableDecl where
-    parseJSON = parseNode handler
-        where handler type' v
-                  | type' == "VariableDeclaration" = VariableDecl
-                                                     <$> v .: "declarations"
-                                                     <*> v .: "kind"
-                  | otherwise = empty
+    parseJSON (A.Object v) = VariableDecl <$> v .: "declarations" <*> v .: "kind"
+    parseJSON _ = empty
 
 instance FromJSON Block where
     parseJSON = parseNode handler

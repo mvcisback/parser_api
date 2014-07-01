@@ -15,6 +15,8 @@ type BlkNode = Node Block
 type IdNode = Node Identifier
 type PatNode = Node Pattern
 
+-- newtype ImplicitEither = ImplicitEither Either
+
 data SourceLocation = SourceLocation { source :: Maybe Text
                                      , start :: Position
                                      , end :: Position
