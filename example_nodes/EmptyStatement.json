@@ -2,8 +2,8 @@
     "type": "EmptyStatement",
     "loc":
     {
-        "start": 4,
-        "end": 5,
+        "start": {"line":1, "column":0},
+        "end": {"line":2, "column":3},
         "name": "x"
     }
 }

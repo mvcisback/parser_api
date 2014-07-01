@@ -7,6 +7,7 @@ import Data.Aeson (FromJSON,ToJSON,(.:),object,(.=),(.:?))
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as B
 import Control.Applicative ((<$>),(<*>),empty, pure)
+import qualified Data.Text as T
 import Data.Text (Text)
 import qualified Data.HashMap.Strict as H
 import Data.Maybe (fromJust)
@@ -21,6 +22,11 @@ instance ToJSON SourceLocation
 instance ToJSON Position
 instance ToJSON ObjectProp
 
+instance ToJSON LitType where
+    toJSON (StringLit str) = A.toJSON str
+    toJSON (BoolLit b) = A.toJSON b
+    toJSON (NumLit n) = A.toJSON n
+
 instance (ToJSON a) => ToJSON (Node a) where
     toJSON (Node x src) = case A.toJSON x of
                             A.Object v -> A.Object (H.insert "loc" (A.toJSON src) v)
@@ -30,13 +36,7 @@ instance ToJSON Identifier where
 
 
 instance ToJSON Literal where
-    toJSON lit = object' "Literal" ["value" .= (val :: Text)]
-        where val = case lit of
-                      StringLit -> "string"
-                      BoolLit -> "boolean"
-                      Null -> "null"
-                      Number -> "number"
-                      RegExp -> "RegExp"
+    toJSON (Literal lt) = object' "Literal" ["value" .= lt]
 
 instance ToJSON Statement where
     toJSON EmptyStatement = object' "EmptyStatement" []
@@ -242,6 +242,13 @@ instance FromJSON Position
 instance FromJSON SourceLocation
 instance FromJSON ObjectProp
 instance FromJSON Lambda
+instance FromJSON Identifier
+
+instance FromJSON LitType where
+    parseJSON val@(A.String _) = StringLit <$> A.parseJSON val
+    parseJSON val@(A.Bool _) = BoolLit <$> A.parseJSON val
+    parseJSON val@(A.Number _) = NumLit <$> A.parseJSON val
+    parseJSON _ = empty
 
 instance (FromJSON a) => FromJSON (Node a) where
     parseJSON obj@(A.Object v) = Node <$> A.parseJSON obj <*> v .: "loc" 
@@ -254,11 +261,7 @@ lookup' lis val = case lookup'' lis val of
                      Just builder -> builder -- TODO make this safe
 
 instance FromJSON Literal where
-    parseJSON (A.Object v) = lookup' lis <$> v .: "value"
-        where  lis = [("string", StringLit)
-                     ,("boolean",BoolLit)
-                     ,("number",Number)
-                     ,("RegExp",RegExp)]
+    parseJSON (A.Object v) = Literal <$> v .:? "value"
     parseJSON _ = empty
 
 
@@ -349,12 +352,6 @@ parseNode handler (A.Object v)
         | otherwise = handler (fromJust type') v
         where type' = H.lookup ("type" :: Text) v
 parseNode _ _ = empty
-
-instance FromJSON Identifier where
-    parseJSON = parseNode handler
-        where handler type' v
-                  | type' == "Identifier" = Identifier <$> v .: "name"
-                  | otherwise = empty
 
 instance FromJSON Statement where
     parseJSON = parseNode handler
@@ -476,12 +473,11 @@ instance FromJSON Expression where
                   | type' == "LetExpression" = LetExpression
                                                <$> v .: "head"
                                                <*> v .: "body"
-                  | type' == "IdentifierExpression" = IdentifierExpression
-                                                      <$> A.parseJSON (A.Object v)
-                  | type' == "LiteralExpression" = LiteralExpression
-                                                   <$> A.parseJSON (A.Object v)
+                  | type' == "Identifier" = IdentifierExpression
+                                            <$> A.parseJSON (A.Object v)
+                  | type' == "Literal" = LiteralExpression
+                                         <$> A.parseJSON (A.Object v)
                   | otherwise = empty
-
 
 instance FromJSON Pattern where
     parseJSON = parseNode handler

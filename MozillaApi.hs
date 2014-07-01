@@ -24,14 +24,17 @@ data Position = Position { line :: Word32 -- TODO add the >= 1 to the type
                          , column :: Word32
                          } deriving (Show,Eq,Generic)
 
-data Identifier = Identifier Text
-                  deriving (Show,Eq)
+data Identifier = Identifier { name :: Text }
+                  deriving (Show,Eq, Generic)
 
-data Literal = StringLit | BoolLit | Null | Number | RegExp
-             deriving (Show, Eq)
+data LitType = StringLit Text | BoolLit Bool | NumLit Float
+             deriving (Show, Eq, Generic)
+
+data Literal = Literal (Maybe LitType)
+               deriving (Show, Eq)
 
 data Function = Function (Maybe Identifier) Lambda
-               deriving  (Show, Eq)
+                deriving  (Show, Eq)
 
 data Program = Program [ Statement ]
                deriving  (Show, Eq)
@@ -140,4 +143,4 @@ data AssignmentOperator = Assign | PlusAssign | MinusAssign | MultAssign | DivAs
                           deriving (Show, Eq)
 
 data UpdateOperator = Increment | Decrement
-                    deriving (Show, Eq)
+                      deriving (Show, Eq)
