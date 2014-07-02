@@ -22,6 +22,23 @@ instance ToJSON SourceLocation
 instance ToJSON Position
 instance ToJSON ObjectProp
 
+instance ToJSON MemberProp where 
+    toJSON (MemId b) = A.toJSON b
+    toJSON (MemExpr e) = A.toJSON e
+
+
+instance ToJSON ObjectKey where 
+    toJSON (ObjLit b) = A.toJSON b
+    toJSON (ObjId e) = A.toJSON e
+
+instance ToJSON ForDecl where 
+    toJSON (ForVar b) = A.toJSON b
+    toJSON (ForExpr e) = A.toJSON e
+
+instance ToJSON LambdaBody where 
+    toJSON (LBlk b) = A.toJSON b
+    toJSON (LExpr e) = A.toJSON e
+
 instance ToJSON LitType where
     toJSON (StringLit str) = A.toJSON str
     toJSON (BoolLit b) = A.toJSON b
@@ -241,8 +258,38 @@ instance ToJSON Program where
 instance FromJSON Position
 instance FromJSON SourceLocation
 instance FromJSON ObjectProp
-instance FromJSON Lambda
 instance FromJSON Identifier
+instance FromJSON Lambda
+
+parseNode handler (A.Object v)
+        | type' == Nothing = empty
+        | otherwise = handler (fromJust type') v
+        where type' = H.lookup ("type" :: Text) v
+parseNode _ _ = empty
+
+instance FromJSON MemberProp where
+    parseJSON = parseNode handler
+        where handler type' v
+                  | type' == "Expression" = MemExpr <$> A.parseJSON (A.Object v)
+                  | type' == "Identifier" = MemId <$> A.parseJSON (A.Object v)
+
+instance FromJSON ObjectKey where
+    parseJSON = parseNode handler
+        where handler type' v
+                  | type' == "Identifier" = ObjId <$> A.parseJSON (A.Object v)
+                  | type' == "Literal" = ObjLit <$> A.parseJSON (A.Object v)
+
+instance FromJSON ForDecl where
+    parseJSON = parseNode handler
+        where handler type' v
+                  | type' == "VariableDeclaration" = ForVar <$> A.parseJSON (A.Object v)
+                  | type' == "Expression" = ForExpr <$> A.parseJSON (A.Object v)
+
+instance FromJSON LambdaBody where
+    parseJSON = parseNode handler
+        where handler type' v
+                  | type' == "BlockStatement" = LBlk <$> A.parseJSON (A.Object v)
+                  | type' == "Expression" = LExpr <$> A.parseJSON (A.Object v)
 
 instance FromJSON LitType where
     parseJSON val@(A.String _) = StringLit <$> A.parseJSON val
@@ -343,11 +390,6 @@ instance FromJSON ObjectKind where
                   | val == "set" = Set
     parseJSON _ = empty
 
-parseNode handler (A.Object v)
-        | type' == Nothing = empty
-        | otherwise = handler (fromJust type') v
-        where type' = H.lookup ("type" :: Text) v
-parseNode _ _ = empty
 
 instance FromJSON Statement where
     parseJSON = parseNode handler
