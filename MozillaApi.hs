@@ -72,7 +72,7 @@ data Statement = EmptyStatement
                | ForStatement (Maybe ForDecl) (Maybe ExprNode) (Maybe ExprNode) StateNode
                | ForInStatement ForDecl ExprNode StateNode Bool
                | ForOfStatement ForDecl ExprNode StateNode
-               | LetStatement [(PatNode, ExprNode)] StateNode
+               | LetStatement [Node VariableDeclarator] StateNode
                | DebuggerStatement
                | FunctionDeclaration (Node Function)
                | VariableDeclaration (Node VariableDecl)
