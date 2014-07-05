@@ -43,6 +43,7 @@ instance ToJSON LitType where
     toJSON (StringLit str) = A.toJSON str
     toJSON (BoolLit b) = A.toJSON b
     toJSON (NumLit n) = A.toJSON n
+    toJSON (Regex) = A.Object H.empty
 
 instance (ToJSON a) => ToJSON (Node a) where
     toJSON (Node x src) = case A.toJSON x of
@@ -295,6 +296,7 @@ instance FromJSON LitType where
     parseJSON val@(A.String _) = StringLit <$> A.parseJSON val
     parseJSON val@(A.Bool _) = BoolLit <$> A.parseJSON val
     parseJSON val@(A.Number _) = NumLit <$> A.parseJSON val
+    parseJSON val@(A.Object _) = pure Regex
     parseJSON _ = empty
 
 instance (FromJSON a) => FromJSON (Node a) where

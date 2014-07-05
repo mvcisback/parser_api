@@ -27,7 +27,7 @@ data Position = Position { line :: Word32 -- TODO add the >= 1 to the type
 data Identifier = Identifier { name :: Text }
                   deriving (Show,Eq, Generic)
 
-data LitType = StringLit Text | BoolLit Bool | NumLit Float
+data LitType = StringLit Text | BoolLit Bool | NumLit Float | Regex
              deriving (Show, Eq, Generic)
 
 data Literal = Literal (Maybe LitType)
