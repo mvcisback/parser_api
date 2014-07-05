@@ -7,7 +7,7 @@ import Data.Word (Word32)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 
-data Node a = Node a SourceLocation
+data Node a = Node a (Maybe SourceLocation)
               deriving (Show, Eq, Generic)
 type ExprNode = Node Expression
 type StateNode = Node Statement

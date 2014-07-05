@@ -270,8 +270,8 @@ parseNode _ _ = empty
 instance FromJSON MemberProp where
     parseJSON = parseNode handler
         where handler type' v
-                  | type' == "Expression" = MemExpr <$> A.parseJSON (A.Object v)
                   | type' == "Identifier" = MemId <$> A.parseJSON (A.Object v)
+                  | otherwise = MemExpr <$> A.parseJSON (A.Object v)
 
 instance FromJSON ObjectKey where
     parseJSON = parseNode handler
@@ -283,13 +283,13 @@ instance FromJSON ForDecl where
     parseJSON = parseNode handler
         where handler type' v
                   | type' == "VariableDeclaration" = ForVar <$> A.parseJSON (A.Object v)
-                  | type' == "Expression" = ForExpr <$> A.parseJSON (A.Object v)
+                  | otherwise = ForExpr <$> A.parseJSON (A.Object v)
 
 instance FromJSON LambdaBody where
     parseJSON = parseNode handler
         where handler type' v
                   | type' == "BlockStatement" = LBlk <$> A.parseJSON (A.Object v)
-                  | type' == "Expression" = LExpr <$> A.parseJSON (A.Object v)
+                  | otherwise = LExpr <$> A.parseJSON (A.Object v)
 
 instance FromJSON LitType where
     parseJSON val@(A.String _) = StringLit <$> A.parseJSON val
