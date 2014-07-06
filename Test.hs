@@ -1,18 +1,18 @@
-import Data.Maybe (fromJust)
-import Data.ByteString.Lazy.Char8 (pack, unpack)
-import Data.ByteString.Lazy.Char8 as B
+{-# LANGUAGE TemplateHaskell #-}
+module Main where
 
-import Data.Aeson (encode, decode')
+import Test.QuickCheck.All
+import Test.QuickCheck
 
 import APIJson
 import MozillaApi (Node, Program)
 import Generate
 import Data.DeriveTH
 
-import Test.QuickCheck
+import Data.Aeson (encode, decode')
 
-main = quickCheck encodeDecodeInvariant
+prop_encodeDecodeInvariant :: Node Program -> Bool
+prop_encodeDecodeInvariant x = Just x == ( decode' . encode) x
 
-encodeDecodeInvariant :: Node Program -> Bool
-encodeDecodeInvariant x = Just x == ( decode' . encode) x
- 
+return [] 
+main = $quickCheckAll
