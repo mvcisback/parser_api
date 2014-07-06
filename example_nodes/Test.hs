@@ -1,13 +1,13 @@
 import Data.Maybe (fromJust)
 import Data.ByteString.Lazy.Char8 (pack, unpack)
+import Data.ByteString.Lazy.Char8 as B
 
 import Data.Aeson (encode, decode')
 
 import APIJson
 import MozillaApi (Node, Program)
 
-main = interact $ process
+main = B.getContents >>= (print . process)
 
 
-process :: String -> String
-process = unpack . encode . (fromJust :: Maybe (Node Program) -> Node Program) . decode'. pack
+process = encode . (fromJust :: Maybe (Node Program) -> Node Program) . decode'

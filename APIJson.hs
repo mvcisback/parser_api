@@ -21,6 +21,7 @@ object' name = object . ([writeType name] ++)
 instance ToJSON SourceLocation
 instance ToJSON Position
 instance ToJSON ObjectProp
+instance ToJSON Lambda
 
 instance ToJSON MemberProp where 
     toJSON (MemId b) = A.toJSON b
@@ -38,6 +39,13 @@ instance ToJSON ForDecl where
 instance ToJSON LambdaBody where 
     toJSON (LBlk b) = A.toJSON b
     toJSON (LExpr e) = A.toJSON e
+
+
+instance ToJSON Function where
+    toJSON (Function name lambda) = A.Object $ H.insert "id" (A.toJSON name) obj
+        where obj = case A.toJSON lambda of
+                      (A.Object v) -> v
+                      _ -> H.empty
 
 instance ToJSON LitType where
     toJSON (StringLit str) = A.toJSON str
@@ -93,18 +101,27 @@ instance ToJSON Statement where
     toJSON (LetStatement head body) = object' "LetStatement" [ "head" .= head
                                                              , "body" .= body]
     toJSON DebuggerStatement = object' "DebuggerStatement" []
-    toJSON (FunctionDeclaration func) = A.Object (H.insert "type" "FunctionDeclaration" v)
-        where (A.Object v) = A.toJSON v
+    toJSON (FunctionDeclaration func) = A.Object (H.insert "type" "FunctionDeclaration" obj)
+        where obj = case A.toJSON func of
+                      (A.Object v) -> v
+                      _ -> H.empty
+
     toJSON (VariableDeclaration dcl) = A.toJSON dcl
 
 instance ToJSON Expression where
     toJSON ThisExpression = object' "ThisExpression" []
     toJSON (ArrayExpression maybe_exps) = object' "ArrayExpression" ["elements" .= maybe_exps]
     toJSON (ObjectExpression props) = object' "ObjectExpression" ["properties" .= props]
-    toJSON (FunctionExpression func) = A.Object (H.insert "type" "FunctionExpression" v)
-        where (A.Object v) = A.toJSON v
-    toJSON (ArrowExpression lambda) = A.Object (H.insert "type" "ArrowExpression" v)
-        where (A.Object v) = A.toJSON v
+    toJSON (FunctionExpression func) = A.Object (H.insert "type" "FunctionExpression" obj)
+        where obj = case A.toJSON func of
+                      (A.Object v) -> v
+                      _ -> H.empty
+
+    toJSON (ArrowExpression lambda) = A.Object (H.insert "type" "ArrowExpression" obj)
+        where obj = case A.toJSON lambda of
+                      (A.Object v) -> v
+                      _ -> H.empty
+
     toJSON (SequenceExpression exps) = object' "SequenceExpression" ["expressions" .= exps]
     toJSON (UnaryExpression op prefix arg) = object' "UnaryExpression" [ "operator" .= op
                                                                        , "prefix" .= prefix
@@ -144,6 +161,7 @@ instance ToJSON Expression where
     toJSON (GraphIndexExpression i) = object' "GraphIndexExpression" ["index" .= i]
     toJSON (LetExpression head body) = object' "LetExpression" ["head" .= head, "body" .= body]
     toJSON (IdentifierExpression i) = A.toJSON i
+    toJSON (LiteralExpression l) = A.toJSON l
 
 instance ToJSON Pattern where
     toJSON (ObjectPattern props) = object' "ObjectPattern" ["properties" .= props]
