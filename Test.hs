@@ -7,6 +7,7 @@ import Data.Aeson (encode, decode')
 import APIJson
 import MozillaApi (Node, Program)
 import Generate
+import Data.DeriveTH
 
 import Test.QuickCheck
 
@@ -15,4 +16,3 @@ main = quickCheck encodeDecodeInvariant
 encodeDecodeInvariant :: Node Program -> Bool
 encodeDecodeInvariant x = Just x == ( decode' . encode) x
  
--- process = encode . (fromJust :: Maybe (Node Program) -> Node Program) . decode'
