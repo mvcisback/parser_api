@@ -119,7 +119,7 @@ data Expression = ThisExpression
                 | LetExpression [(PatNode, Maybe ExprNode)] ExprNode
                 | IdentifierExpression IdNode
                 | LiteralExpression (Node Literal)
-                  deriving (Show, Eq)
+                 deriving (Show, Eq)
 
 data Pattern = ObjectPattern [(ObjectKey,Pattern)]
              | ArrayPattern [Maybe PatNode]
