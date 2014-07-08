@@ -56,7 +56,7 @@ data ForDecl = ForVar (Node VariableDecl) | ForExpr (ExprNode)
               deriving (Show,Read,Eq)
 
 data Statement = EmptyStatement 
-               | BlockStatement BlkNode
+               | BlockStatement Block
                | ExpressionStatement ExprNode
                | IfStatement ExprNode StateNode (Maybe StateNode)
                | LabeledStatement IdNode StateNode
