@@ -195,8 +195,8 @@ arbPat = do x <- choose (0 :: Int, 2)
 
 instance Arbitrary Pattern where
         arbitrary = frequency [(1, arbPat)
-                              ,(4, do x1 <- arbitrary
-                                      return (IdentifierPattern x1))]
+                              ,(100, do x1 <- arbitrary
+                                        return (IdentifierPattern x1))]
           
 
 instance Arbitrary Statement where

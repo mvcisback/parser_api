@@ -8,7 +8,7 @@ import Data.Text (Text)
 import GHC.Generics (Generic)
 
 data Node a = Node a (Maybe SourceLocation)
-              deriving (Show, Eq, Generic)
+              deriving (Show,Read,Eq,Generic)
 type ExprNode = Node Expression
 type StateNode = Node Statement
 type BlkNode = Node Block
@@ -18,42 +18,42 @@ type PatNode = Node Pattern
 data SourceLocation = SourceLocation { source :: Maybe Text
                                      , start :: Position
                                      , end :: Position
-                                     } deriving (Show,Eq,Generic)
+                                     } deriving (Show,Read,Eq,Generic)
 
 data Position = Position { line :: Word32 -- TODO add the >= 1 to the type
                          , column :: Word32
-                         } deriving (Show,Eq,Generic)
+                         } deriving (Show,Read,Eq,Generic)
 
 data Identifier = Identifier { name :: Text }
-                  deriving (Show,Eq, Generic)
+                  deriving (Show,Read,Eq,Generic)
 
 data LitType = StringLit Text | BoolLit Bool | NumLit Float | Regex
-             deriving (Show, Eq, Generic)
+             deriving (Show,Read,Eq,Generic)
 
 data Literal = Literal (Maybe LitType)
-               deriving (Show, Eq)
+               deriving (Show,Read,Eq)
 
-data Function = Function (Maybe Identifier) Lambda
-                deriving  (Show, Eq)
+data Function = Function (Maybe IdNode) Lambda
+                deriving  (Show,Read,Eq)
 
-data Program = Program [ Statement ]
-               deriving  (Show, Eq)
+data Program = Program [ StateNode ]
+               deriving  (Show,Read,Eq)
 
 data LambdaBody = LBlk BlkNode | LExpr ExprNode
-                  deriving (Show,Eq)
+                  deriving (Show,Read,Eq)
 
 data Lambda = Lambda {params :: [ PatNode ]
                      , defaults :: [ ExprNode ]
                      , rest :: Maybe (IdNode)
                      , body :: LambdaBody
                      , generator :: Bool
-                     , expression :: Bool } deriving  (Show, Eq, Generic)
+                     , expression :: Bool } deriving  (Show,Read,Eq,Generic)
 
-data Block =  Block [ Statement ]
-           deriving (Show, Eq)
+data Block =  Block [ StateNode ]
+           deriving (Show,Read,Eq)
 
 data ForDecl = ForVar (Node VariableDecl) | ForExpr (ExprNode)
-              deriving (Show, Eq)
+              deriving (Show,Read,Eq)
 
 data Statement = EmptyStatement 
                | BlockStatement BlkNode
@@ -76,25 +76,26 @@ data Statement = EmptyStatement
                | DebuggerStatement
                | FunctionDeclaration (Node Function)
                | VariableDeclaration (Node VariableDecl)
-                 deriving (Show, Eq)
+                 deriving (Show,Read,Eq)
 
-data VariableKind = Var | Let | Const deriving (Show, Eq)
+data VariableKind = Var | Let | Const deriving (Show,Read,Eq)
 
 data VariableDecl = VariableDecl [Node VariableDeclarator] VariableKind
-                    deriving (Show, Eq)
+                    deriving (Show,Read,Eq)
 
-data VariableDeclarator = VariableDeclarator PatNode (Maybe ExprNode) deriving (Show, Eq)
+data VariableDeclarator = VariableDeclarator PatNode (Maybe ExprNode)
+                          deriving (Show,Read,Eq)
 
-data ObjectKind = Init | Get | Set deriving (Show, Eq)
+data ObjectKind = Init | Get | Set deriving (Show,Read,Eq)
 data ObjectKey = ObjLit (Node Literal) | ObjId IdNode
-               deriving (Show, Eq)
+               deriving (Show,Read,Eq)
 data ObjectProp = ObjectProp {key :: ObjectKey
                              ,value :: ExprNode
                              ,kind :: ObjectKind}
-                deriving (Show,Eq,Generic)
+                deriving (Show,Read,Eq,Generic)
 
 data MemberProp = MemId IdNode | MemExpr ExprNode
-                deriving (Show,Eq)
+                deriving (Show,Read,Eq)
 
 data Expression = ThisExpression
                 | ArrayExpression [Maybe ExprNode]
@@ -119,38 +120,38 @@ data Expression = ThisExpression
                 | LetExpression [(PatNode, Maybe ExprNode)] ExprNode
                 | IdentifierExpression IdNode
                 | LiteralExpression (Node Literal)
-                 deriving (Show, Eq)
+                 deriving (Show,Read,Eq)
 
 data Pattern = ObjectPattern [(ObjectKey,Pattern)]
              | ArrayPattern [Maybe PatNode]
              | IdentifierPattern IdNode
-               deriving (Show, Eq)
+               deriving (Show,Read,Eq)
 
 data SwitchCase = SwitchCase (Maybe ExprNode) [StateNode]
-                  deriving (Show, Eq)
+                  deriving (Show,Read,Eq)
 
 data CatchClause = CatchClause PatNode (Maybe ExprNode) BlkNode
-                   deriving (Show, Eq)
+                   deriving (Show,Read,Eq)
 
 data ComprehensionBlock = ComprehensionBlock PatNode ExprNode Bool
-                          deriving (Show, Eq)
+                          deriving (Show,Read,Eq)
                         
 
 data UnaryOperator = Negate | Positive | Bang | Tilde | TypeOf | Void | Delete
-                     deriving (Show, Eq)
+                     deriving (Show,Read,Eq)
 
 data BinaryOperator = Equal | NotEqual | Same | NotSame | LT | LTE | GT | GTE 
                     | LShift | RShift | RRShift | Plus | Minus | Times | Div 
                     | Mod | BinOr | BinXor | BinAnd | In | InstanceOf | DotDot
-                      deriving (Show, Eq)
+                      deriving (Show,Read,Eq)
 
 data LogicalOperator = Or | And
-                     deriving (Show, Eq)
+                     deriving (Show,Read,Eq)
 
 data AssignmentOperator = Assign | PlusAssign | MinusAssign | MultAssign | DivAssign | ModAssign
                         | LShiftAssign | RShiftAssign | RRShiftAssign | OrAssign | XorAssign
                         | AndAssign
-                          deriving (Show, Eq)
+                          deriving (Show,Read,Eq)
 
 data UpdateOperator = Increment | Decrement
-                      deriving (Show, Eq)
+                      deriving (Show,Read,Eq)
