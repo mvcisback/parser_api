@@ -86,7 +86,7 @@ instance ToJSON Statement where
                                                                   , "finalizer" .= blk2]
 
     toJSON (WhileStatement e s) = object' "WhileStatement" ["test" .= e, "body" .= s]
-    toJSON (DoWhileStatement e s) = object' "DoWhileStatement" ["test" .= e, "body" .= s]
+    toJSON (DoWhileStatement s e) = object' "DoWhileStatement" ["test" .= e, "body" .= s]
     toJSON (ForStatement init test update body) = object' "ForStatement" ["init" .= init
                                                                          ,"test" .= test
                                                                          ,"update" .= update

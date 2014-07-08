@@ -194,17 +194,17 @@ arbPat = do x <- choose (0 :: Int, 2)
               _ -> error "FATAL ERROR: Arbitrary instance, logic bug"
 
 instance Arbitrary Pattern where
-        arbitrary = frequency [(1, arbPat)
-                              ,(100, do x1 <- arbitrary
-                                        return (IdentifierPattern x1))]
+    arbitrary = frequency [(1, arbPat)
+                          ,(100, do x1 <- arbitrary
+                                    return (IdentifierPattern x1))]
           
 
 instance Arbitrary Statement where
-        arbitrary = frequency [(1, arbStmt)
-                              ,(20, return EmptyStatement :: Gen Statement)]
+    arbitrary = frequency [(1, arbStmt)
+                          ,(20, return EmptyStatement :: Gen Statement)]
 
 
 instance Arbitrary Expression where
-        arbitrary = frequency [(20, return ThisExpression :: Gen Expression)
-                              ,(1, arbExp)]
+    arbitrary = frequency [(20, return ThisExpression :: Gen Expression)
+                          ,(1, arbExp)]
 
