@@ -478,7 +478,7 @@ instance FromJSON Expression where
                   | type' == "ArrayExpression" = ArrayExpression <$> v .: "elements"
                   | type' == "ObjectExpression" = ObjectExpression <$> v .: "properties"
                   | type' == "FunctionExpression" = FunctionExpression <$> A.parseJSON (A.Object v)
-                  | type' == "ArrowExpression" = ArrayExpression <$> A.parseJSON (A.Object v)
+                  | type' == "ArrowExpression" = ArrowExpression <$> A.parseJSON (A.Object v)
                   | type' == "SequenceExpression" = SequenceExpression <$> v .: "expressions"
                   | type' == "UnaryExpression" = UnaryExpression
                                                  <$> v .: "operator"
@@ -502,8 +502,8 @@ instance FromJSON Expression where
                                                    <*> v .: "right"
                   | type' == "ConditionalExpression" = ConditionalExpression
                                                        <$> v .: "test"
-                                                       <*> v .: "alternate"
                                                        <*> v .: "consequent"
+                                                       <*> v .: "alternate"
                   | type' == "NewExpression" = NewExpression
                                                <$> v .: "callee"
                                                <*> v .: "arguments"

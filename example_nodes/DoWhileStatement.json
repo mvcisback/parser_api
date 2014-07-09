@@ -1,0 +1,6 @@
+{"body":{"loc":null,
+         "type":"EmptyStatement"},
+ "test":{"loc":null,
+         "type":"ThisExpression"},
+ "loc":null,
+ "type":"DoWhileStatement"}

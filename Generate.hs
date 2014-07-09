@@ -201,7 +201,7 @@ instance Arbitrary Pattern where
 
 instance Arbitrary Statement where
     arbitrary = frequency [(1, arbStmt)
-                          ,(20, return EmptyStatement :: Gen Statement)]
+                          ,(10, return EmptyStatement :: Gen Statement)]
 
 
 instance Arbitrary Expression where

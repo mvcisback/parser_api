@@ -74,8 +74,8 @@ data Statement = EmptyStatement
                | ForOfStatement ForDecl ExprNode StateNode
                | LetStatement [Node VariableDeclarator] StateNode
                | DebuggerStatement
-               | FunctionDeclaration (Node Function)
-               | VariableDeclaration (Node VariableDecl)
+               | FunctionDeclaration Function
+               | VariableDeclaration VariableDecl
                  deriving (Show,Read,Eq)
 
 data VariableKind = Var | Let | Const deriving (Show,Read,Eq)
@@ -100,8 +100,8 @@ data MemberProp = MemId IdNode | MemExpr ExprNode
 data Expression = ThisExpression
                 | ArrayExpression [Maybe ExprNode]
                 | ObjectExpression [ObjectProp]
-                | FunctionExpression (Node Function)
-                | ArrowExpression (Node Lambda)
+                | FunctionExpression Function
+                | ArrowExpression Lambda
                 | SequenceExpression [ExprNode]
                 | UnaryExpression UnaryOperator Bool ExprNode
                 | BinaryExpression BinaryOperator ExprNode ExprNode
@@ -118,8 +118,8 @@ data Expression = ThisExpression
                 | GraphExpression Word32 (Node Literal)
                 | GraphIndexExpression Word32
                 | LetExpression [(PatNode, Maybe ExprNode)] ExprNode
-                | IdentifierExpression IdNode
-                | LiteralExpression (Node Literal)
+                | IdentifierExpression Identifier
+                | LiteralExpression Literal
                  deriving (Show,Read,Eq)
 
 data Pattern = ObjectPattern [(ObjectKey,Pattern)]

@@ -5,7 +5,7 @@ import Test.QuickCheck.All
 import Test.QuickCheck
 
 import APIJson
-import MozillaApi (Node, Program)
+import MozillaApi
 import Generate
 import Data.DeriveTH
 

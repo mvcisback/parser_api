@@ -1,0 +1,21 @@
+{
+    "type": "UnaryExpression",
+    "loc":
+    {
+        "start": {"line":1, "column":0},
+        "end": {"line":2, "column":3},
+        "name": "x"
+    },
+    "operator": "-",
+    "prefix": false,
+    "argument": {
+        "type": "ThisExpression",
+        "loc":
+        {
+            "start": {"line":1, "column":0},
+            "end": {"line":2, "column":3},
+            "name": "x"
+        }
+    }
+
+}

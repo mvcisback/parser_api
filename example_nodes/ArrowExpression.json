@@ -1,0 +1,9 @@
+{"defaults":[],
+ "body":{"loc":null,
+         "type":"ThisExpression"},
+ "params":[],
+ "expression":false,
+ "loc":null,
+ "type":"ArrowExpression",
+ "rest":null,
+ "generator":false}
