@@ -167,6 +167,7 @@ instance ToJSON Pattern where
     toJSON (ObjectPattern props) = object' "ObjectPattern" ["properties" .= props]
     toJSON (ArrayPattern elements) = object' "ArrayPattern" ["elements" .= elements]
     toJSON (IdentifierPattern i) = A.toJSON i
+    toJSON (ExprPattern e) = A.toJSON e
 
 instance ToJSON SwitchCase where
     toJSON (SwitchCase test sl) = object' "SwitchCase" ["test" .= test, "consequent" .= sl]
@@ -544,7 +545,7 @@ instance FromJSON Pattern where
                   | type' == "ArrayPattern" = ArrayPattern <$> v .: "elements"
                   | type' == "Identifier" = IdentifierPattern
                                             <$> A.parseJSON (A.Object v)
-                  | otherwise = empty
+                  | otherwise = ExprPattern <$> A.parseJSON (A.Object v)
 
 instance FromJSON SwitchCase where
     parseJSON = parseNode handler

@@ -125,6 +125,7 @@ data Expression = ThisExpression
 data Pattern = ObjectPattern [(ObjectKey,Pattern)]
              | ArrayPattern [Maybe PatNode]
              | IdentifierPattern Identifier
+             | ExprPattern Expression
                deriving (Show,Read,Eq)
 
 data SwitchCase = SwitchCase (Maybe ExprNode) [StateNode]
