@@ -45,6 +45,7 @@ $( derive makeArbitrary ''CatchClause )
 $( derive makeArbitrary ''ComprehensionBlock )
 
 
+arbExp :: Gen Expression
 arbExp =
    do x <- choose (0 :: Int, 22)
       case x of
@@ -117,7 +118,7 @@ arbExp =
                    return (LiteralExpression x1)
           _ -> error "FATAL ERROR: Arbitrary instance, logic bug"
  
-
+arbStmt :: Gen Statement
 arbStmt = 
    do x <- choose (0 :: Int, 20)
       case x of
@@ -183,6 +184,7 @@ arbStmt =
                    return (VariableDeclaration x1)
           _ -> error "FATAL ERROR: Arbitrary instance, logic bug"
 
+arbPat :: Gen Pattern
 arbPat = do x <- choose (0 :: Int, 2)
             case x of
               0 -> do x1 <- arbitrary

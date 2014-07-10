@@ -1,13 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module APIJson
-    where
+module APIJson where
 
 import Data.Aeson (FromJSON,ToJSON,(.:),object,(.=),(.:?))
 import qualified Data.Aeson as A
-import qualified Data.ByteString.Lazy as B
-import Control.Applicative ((<$>),(<*>),empty, pure)
-import qualified Data.Text as T
+import Control.Applicative ((<$>),(<*>),empty, pure, Alternative)
 import Data.Text (Text)
 import qualified Data.HashMap.Strict as H
 import Data.Maybe (fromJust)
@@ -16,7 +13,7 @@ import MozillaApi
 
 
 writeType val = "type" .= (val :: Text)
-object' name = object . ([writeType name] ++)
+object' name' = object . ([writeType name'] ++)
 
 instance ToJSON SourceLocation
 instance ToJSON Position
@@ -42,7 +39,7 @@ instance ToJSON LambdaBody where
 
 
 instance ToJSON Function where
-    toJSON (Function name lambda) = A.Object $ H.insert "id" (A.toJSON name) obj
+    toJSON (Function name' lambda) = A.Object $ H.insert "id" (A.toJSON name') obj
         where obj = case A.toJSON lambda of
                       (A.Object v) -> v
                       _ -> H.empty
@@ -58,7 +55,7 @@ instance (ToJSON a) => ToJSON (Node a) where
                             A.Object v -> A.Object (H.insert "loc" (A.toJSON src) v)
 
 instance ToJSON Identifier where
-    toJSON (Identifier name) = object' "Identifier" [ "name" .= name ]
+    toJSON (Identifier name') = object' "Identifier" [ "name" .= name' ]
 
 
 instance ToJSON Literal where
@@ -75,9 +72,9 @@ instance ToJSON Statement where
     toJSON (BreakStatement maybe_i) = object' "BreakStatement"["label" .= maybe_i]
     toJSON (ContinueStatement maybe_i) = object' "ContinueStatement" ["label" .= maybe_i]
     toJSON (WithStatement e s) = object' "WithStatement" ["object" .= e, "body" .= s]
-    toJSON (SwitchStatement e cases lex) = object' "SwitchStatement" [ "discriminant" .= e
-                                                                     , "cases" .= cases
-                                                                     , "lexical" .= lex]
+    toJSON (SwitchStatement e cases lex') = object' "SwitchStatement" [ "discriminant" .= e
+                                                                      , "cases" .= cases
+                                                                      , "lexical" .= lex']
     toJSON (ReturnStatement maybe_e) = object' "ReturnStatement" ["argument" .= maybe_e]
     toJSON (ThrowStatement e) = object' "ThrowStatement" ["argument" .= e]
     toJSON (TryStatement blk cc ccl blk2) = object' "TryStatement" [ "block" .= blk
@@ -87,19 +84,19 @@ instance ToJSON Statement where
 
     toJSON (WhileStatement e s) = object' "WhileStatement" ["test" .= e, "body" .= s]
     toJSON (DoWhileStatement s e) = object' "DoWhileStatement" ["test" .= e, "body" .= s]
-    toJSON (ForStatement init test update body) = object' "ForStatement" ["init" .= init
-                                                                         ,"test" .= test
-                                                                         ,"update" .= update
-                                                                         ,"body" .= body]
-    toJSON (ForInStatement lft rgt body each) = object' "ForInStatement" ["left" .= lft
+    toJSON (ForStatement i test update bod) = object' "ForStatement" ["init" .= i
+                                                                     ,"test" .= test
+                                                                     ,"update" .= update
+                                                                     ,"body" .= bod]
+    toJSON (ForInStatement lft rgt bod each) = object' "ForInStatement" ["left" .= lft
                                                                          ,"right" .= rgt
-                                                                         ,"body" .= body
+                                                                         ,"body" .= bod
                                                                          ,"each" .= each]
-    toJSON (ForOfStatement lft rgt body) = object' "ForOfStatement" ["left" .= lft
+    toJSON (ForOfStatement lft rgt bod) = object' "ForOfStatement" ["left" .= lft
                                                                     ,"right" .= rgt
-                                                                    ,"body" .= body]
-    toJSON (LetStatement head body) = object' "LetStatement" [ "head" .= head
-                                                             , "body" .= body]
+                                                                    ,"body" .= bod]
+    toJSON (LetStatement h bod) = object' "LetStatement" [ "head" .= h
+                                                         , "body" .= bod]
     toJSON DebuggerStatement = object' "DebuggerStatement" []
     toJSON (FunctionDeclaration func) = A.Object (H.insert "type" "FunctionDeclaration" obj)
         where obj = case A.toJSON func of
@@ -151,15 +148,15 @@ instance ToJSON Expression where
                                                                            , "computed" .= computed
                                                                            ]
     toJSON (YieldExpression arg) = object' "YieldExpression" ["argument" .= arg]
-    toJSON (ComprehensionExpression body blocks filter) = object' "ComprehensionExpression" [ "body" .= body
-                                                                                            , "blocks" .= blocks
-                                                                                            , "filter" .= filter]
-    toJSON (GeneratorExpression body blocks filter) = object' "GeneratorExpression" ["body" .= body
-                                                                                    ,"blocks" .= blocks
-                                                                                    ,"filter" .= filter]
+    toJSON (ComprehensionExpression bod blocks f) = object' "ComprehensionExpression" [ "body" .= bod
+                                                                                      , "blocks" .= blocks
+                                                                                      , "filter" .= f]
+    toJSON (GeneratorExpression bod blocks f) = object' "GeneratorExpression" ["body" .= bod
+                                                                              ,"blocks" .= blocks
+                                                                              ,"filter" .= f]
     toJSON (GraphExpression i lit) = object' "GraphExpression" ["index" .= i, "expression" .= lit]
     toJSON (GraphIndexExpression i) = object' "GraphIndexExpression" ["index" .= i]
-    toJSON (LetExpression head body) = object' "LetExpression" ["head" .= head, "body" .= body]
+    toJSON (LetExpression h bod) = object' "LetExpression" ["head" .= h, "body" .= bod]
     toJSON (IdentifierExpression i) = A.toJSON i
     toJSON (LiteralExpression l) = A.toJSON l
 
@@ -239,7 +236,7 @@ instance ToJSON UpdateOperator where
                       Decrement -> "--"
 
 instance ToJSON VariableDeclarator where
-    toJSON (VariableDeclarator ident init) = object' "VariableDeclarator" ["id" .= ident, "init" .= init]
+    toJSON (VariableDeclarator ident i) = object' "VariableDeclarator" ["id" .= ident, "init" .= i]
 
 instance ToJSON VariableKind where
     toJSON val = A.toJSON (str :: Text)
@@ -249,7 +246,7 @@ instance ToJSON VariableKind where
                       Const -> "const"
 
 instance ToJSON VariableDecl where
-    toJSON (VariableDecl decls kind) = object' "VariableDeclaration" ["declarations" .= decls, "kind" .= kind]
+    toJSON (VariableDecl decls kind') = object' "VariableDeclaration" ["declarations" .= decls, "kind" .= kind']
 
 instance ToJSON ObjectKind where
     toJSON val = A.toJSON (str :: Text)
@@ -262,16 +259,16 @@ instance ToJSON Block where
     toJSON (Block stmts) = object' "BlockStatement" ["body" .= stmts]
 
 instance ToJSON CatchClause where
-    toJSON (CatchClause param guard body) = object' "CatchClause" ["param" .= param
+    toJSON (CatchClause param guard bod) = object' "CatchClause" ["param" .= param
                                                                   ,"guard" .= guard
-                                                                  ,"body" .= body]
+                                                                  ,"body" .= bod]
 instance ToJSON ComprehensionBlock where
     toJSON (ComprehensionBlock lft rgt each) = object' "ComprehensionBlock" ["left" .= lft
                                                                             ,"right" .= rgt
                                                                             ,"each" .= each]
 
 instance ToJSON Program where
-    toJSON (Program body) = object' "Program" ["body" .= body]
+    toJSON (Program bod) = object' "Program" ["body" .= bod]
 
 ------------------------------------------------------------------------
 
@@ -281,6 +278,7 @@ instance FromJSON ObjectProp
 instance FromJSON Identifier
 instance FromJSON Lambda
 
+parseNode :: Control.Applicative.Alternative f => (A.Value -> A.Object -> f a) -> A.Value -> f a
 parseNode handler (A.Object v)
         | type' == Nothing = empty
         | otherwise = handler (fromJust type') v
@@ -297,7 +295,7 @@ instance FromJSON ObjectKey where
     parseJSON = parseNode handler
         where handler type' v
                   | type' == "Identifier" = ObjId <$> A.parseJSON (A.Object v)
-                  | type' == "Literal" = ObjLit <$> A.parseJSON (A.Object v)
+                  | otherwise = ObjLit <$> A.parseJSON (A.Object v)
 
 instance FromJSON ForDecl where
     parseJSON = parseNode handler
@@ -315,7 +313,7 @@ instance FromJSON LitType where
     parseJSON val@(A.String _) = StringLit <$> A.parseJSON val
     parseJSON val@(A.Bool _) = BoolLit <$> A.parseJSON val
     parseJSON val@(A.Number _) = NumLit <$> A.parseJSON val
-    parseJSON val@(A.Object _) = pure Regex
+    parseJSON (A.Object _) = pure Regex
     parseJSON _ = empty
 
 instance (FromJSON a) => FromJSON (Node a) where
@@ -325,6 +323,7 @@ instance (FromJSON a) => FromJSON (Node a) where
 lookup'' :: [(Text, a)] -> Text -> Maybe a
 lookup'' = flip lookup
 
+lookup' :: [(Text, a)] -> Text -> a
 lookup' lis val = case lookup'' lis val of 
                      Just builder -> builder -- TODO make this safe
 
@@ -371,7 +370,7 @@ instance FromJSON BinaryOperator where
     parseJSON _ = empty
 
 instance FromJSON LogicalOperator where
-    parseJSON val@(A.String v) = lookup' lis <$> A.parseJSON val
+    parseJSON val@(A.String _) = lookup' lis <$> A.parseJSON val
         where lis = [("||",Or), ("&&",And)]
     parseJSON _ = empty
 
@@ -403,12 +402,12 @@ instance FromJSON VariableKind where
     parseJSON _ = empty
 
 instance FromJSON ObjectKind where
-    parseJSON val@(A.String v) = makeOp <$> A.parseJSON val
+    parseJSON val@(A.String _) = makeOp <$> A.parseJSON val
         where makeOp :: Text -> ObjectKind
-              makeOp val
-                  | val == "init" = Init
-                  | val == "get" = Get
-                  | val == "set" = Set
+              makeOp val'
+                  | val' == "init" = Init
+                  | val' == "get" = Get
+                  | val' == "set" = Set
     parseJSON _ = empty
 
 
