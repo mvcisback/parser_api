@@ -44,7 +44,7 @@ data LambdaBody = LBlk BlkNode | LExpr ExprNode
 
 data Lambda = Lambda {params :: [ PatNode ]
                      , defaults :: [ ExprNode ]
-                     , rest :: Maybe (IdNode)
+                     , rest :: Maybe IdNode
                      , body :: LambdaBody
                      , generator :: Bool
                      , expression :: Bool } deriving  (Show,Read,Eq,Generic)
@@ -63,10 +63,10 @@ data Statement = EmptyStatement
                | BreakStatement (Maybe IdNode)
                | ContinueStatement (Maybe IdNode)
                | WithStatement ExprNode StateNode
-               | SwitchStatement ExprNode [ (Node SwitchCase) ] Bool
+               | SwitchStatement ExprNode [ Node SwitchCase ] Bool
                | ReturnStatement (Maybe ExprNode)
                | ThrowStatement ExprNode
-               | TryStatement BlkNode (Maybe (Node CatchClause)) [ (Node CatchClause) ] (Maybe BlkNode)
+               | TryStatement BlkNode (Maybe (Node CatchClause)) [ Node CatchClause ] (Maybe BlkNode)
                | WhileStatement ExprNode StateNode
                | DoWhileStatement StateNode ExprNode
                | ForStatement (Maybe ForDecl) (Maybe ExprNode) (Maybe ExprNode) StateNode

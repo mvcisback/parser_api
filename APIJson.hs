@@ -7,7 +7,7 @@ import qualified Data.Aeson as A
 import Control.Applicative ((<$>),(<*>),empty, pure, Alternative)
 import Data.Text (Text)
 import qualified Data.HashMap.Strict as H
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, isNothing)
 
 import MozillaApi
 
@@ -280,7 +280,7 @@ instance FromJSON Lambda
 
 parseNode :: Control.Applicative.Alternative f => (A.Value -> A.Object -> f a) -> A.Value -> f a
 parseNode handler (A.Object v)
-        | type' == Nothing = empty
+        | isNothing type' = empty
         | otherwise = handler (fromJust type') v
         where type' = H.lookup ("type" :: Text) v
 parseNode _ _ = empty
